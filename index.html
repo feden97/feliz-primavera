@@ -565,12 +565,104 @@
             background: rgba(201, 168, 76, .2);
             border-radius: 2px;
         }
+
+        /* REDESIGNED VOLUME CONTROL (Compact Floating Bubble) */
+        #volume-ctrl {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            width: 44px; /* Default: Circle icon */
+            height: 44px;
+            background: rgba(13, 26, 13, .5);
+            backdrop-filter: blur(12px);
+            border-radius: 22px;
+            border: 1px solid rgba(201, 168, 76, .2);
+            cursor: pointer;
+            transition: all .5s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateX(-20px);
+            pointer-events: none;
+            overflow: hidden;
+            padding-left: 10px;
+        }
+
+        #volume-ctrl.visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        #volume-ctrl:hover {
+            width: 150px; /* Expands to show slider */
+            background: rgba(26, 46, 26, .9);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+        }
+
+        .vol-icon {
+            font-size: 1.1rem;
+            min-width: 24px;
+            text-align: center;
+            margin-right: 12px;
+        }
+
+        /* Interactive Slider */
+        #vol-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80px;
+            height: 2px;
+            background: rgba(201, 168, 76, .2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+        #volume-ctrl:hover #vol-slider {
+            opacity: 1;
+        }
+
+        #vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(201, 168, 76, .5);
+            border: none;
+        }
+
+        #vol-slider::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
     </style>
 </head>
 
 <body>
 
     <canvas id="bg-canvas"></canvas>
+
+    <!-- Ambient Music (Coloca tu archivo como 'musica.mp3' en la misma carpeta) -->
+    <audio id="ambient-music" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="volume-ctrl">
+        <div class="vol-icon" id="vol-icon" onclick="toggleMusic()">🎵</div>
+        <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.4" oninput="changeVolume(this.value)">
+    </div>
 
     <div id="nav-dots">
         <div class="dot" data-i="0"></div>
@@ -1032,13 +1124,42 @@
         let currentScene = -1;
         let flowerCount = 0;
         let flowersReceived = false;
+        let isMuted = false;
+        const mainAudio = document.getElementById('ambient-music');
 
         function initExperience() {
             const ov = document.getElementById('start-overlay');
             ov.style.opacity = '0';
-            setTimeout(() => { ov.style.display = 'none'; goScene(0); }, 1200);
+            setTimeout(() => { 
+                ov.style.display = 'none'; 
+                goScene(0); 
+                // Start music after interaction
+                mainAudio.volume = 0.4;
+                mainAudio.play().catch(e => console.log("Autoplay blocked or link broken"));
+                document.getElementById('volume-ctrl').classList.add('visible');
+            }, 1200);
             initCanvas();
             spawnPetals();
+        }
+
+        function toggleMusic() {
+            if (mainAudio.paused) {
+                mainAudio.play();
+                document.getElementById('vol-icon').textContent = '🎵';
+            } else {
+                mainAudio.pause();
+                document.getElementById('vol-icon').textContent = '🔇';
+            }
+        }
+
+        function changeVolume(val) {
+            mainAudio.volume = val;
+            // If user slides to 0, show mute icon
+            if (val == 0) {
+                document.getElementById('vol-icon').textContent = '🔇';
+            } else if (!mainAudio.paused) {
+                document.getElementById('vol-icon').textContent = '🎵';
+            }
         }
 
         function goScene(i) {
