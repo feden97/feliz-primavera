@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Niferi — El Equinoccio de Primavera</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --forest: #162316;
+            --deep: #0d1a0d;
+            --gold: #c9a84c;
+            --gold-light: #e8cc7a;
+            --rose: #c4727a;
+            --cream: #f5f0e8;
+            --moss: #3a5c3a;
+            --crystal: #a8d4e6;
+            --petal: #f7c8d0;
+            --bark: #6b4226;
+            --sunflower: #f5c518;
+            --sunflower-dark: #d4a017;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--deep);
+            font-family: 'Lora', serif;
+            color: var(--cream);
+        }
+
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2.5rem 1.6rem 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.4s ease, transform 1.4s ease;
+            transform: translateY(24px);
+            z-index: 10;
+            overflow-y: auto;
+            text-align: center;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Cinzel', serif;
+            letter-spacing: .08em;
+        }
+
+        .body-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.18rem;
+            line-height: 1.85;
+            color: #d4cfc4;
+            max-width: 560px;
+            margin-bottom: 1.4rem;
+        }
+
+        .chapter-label {
+            font-family: 'Cinzel', serif;
+            font-size: .65rem;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: .6rem;
+            opacity: .7;
+        }
+
+        .scene-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            color: var(--gold-light);
+            margin-bottom: 1.6rem;
+            text-shadow: 0 0 30px rgba(201, 168, 76, .3);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.2rem 0;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+            opacity: .4;
+        }
+
+        .divider span {
+            color: var(--gold);
+            font-size: .8rem;
+            opacity: .5;
+        }
+
+        .btn {
+            margin-top: 1.8rem;
+            padding: 1rem 2.8rem;
+            border: 1px solid var(--gold);
+            background: rgba(201, 168, 76, .08);
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: .75rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background .4s, color .4s, box-shadow .4s;
+        }
+
+        .btn:active,
+        .btn:hover {
+            background: rgba(201, 168, 76, .22);
+            box-shadow: 0 0 20px rgba(201, 168, 76, .25);
+        }
+
+        /* START OVERLAY */
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: radial-gradient(ellipse at 50% 60%, #1a2e1a 0%, #0d1a0d 100%);
+            transition: opacity 1.2s ease;
+        }
+
+        #start-overlay .crown {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            opacity: .6;
+        }
+
+        #start-overlay h1 {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.2rem, 8vw, 3.5rem);
+            color: var(--gold-light);
+            text-shadow: 0 0 60px rgba(201, 168, 76, .4);
+            margin-bottom: .5rem;
+        }
+
+        #start-overlay .sub {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1.05rem;
+            color: #7a9e7a;
+            margin-bottom: .4rem;
+        }
+
+        #start-overlay .date {
+            font-family: 'Cinzel', serif;
+            font-size: .7rem;
+            letter-spacing: .3em;
+            color: var(--gold);
+            opacity: .5;
+            margin-bottom: 3rem;
+        }
+
+        /* CASTLE */
+        #castle-silhouette {
+            width: min(320px, 88vw);
+            height: 180px;
+            position: relative;
+            margin: 1.5rem 0;
+            flex-shrink: 0;
+        }
+
+        #castle-silhouette svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* GARDEN */
+        #garden-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .9rem;
+            width: min(380px, 92vw);
+            margin: 1.2rem 0;
+            flex-shrink: 0;
+        }
+
+        .flower-card {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            border: 1px solid rgba(201, 168, 76, .25);
+            background: rgba(26, 46, 26, .6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform .3s, box-shadow .3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .flower-card:active {
+            transform: scale(.93);
+        }
+
+        .flower-card .memory {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 26, 13, .92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: .6rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: .82rem;
+            color: #d4cfc4;
+            line-height: 1.4;
+            opacity: 0;
+            transition: opacity .5s;
+            pointer-events: none;
+        }
+
+        .flower-card.revealed .memory {
+            opacity: 1;
+        }
+
+        .flower-card.revealed {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(201, 168, 76, .2);
+        }
+
+        /* SCENE 3 — FLORES AMARILLAS */
+        #bouquet-wrap {
+            position: relative;
+            width: min(270px, 80vw);
+            margin: .8rem 0;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        #bouquet-wrap svg {
+            width: 100%;
+        }
+
+        #bouquet-hint {
+            font-size: .65rem;
+            letter-spacing: .18em;
+            color: var(--sunflower);
+            opacity: .45;
+            text-transform: uppercase;
+            margin-top: .3rem;
+            transition: opacity .6s;
+        }
+
+        @keyframes yellowBurst {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(var(--bx), var(--by)) rotate(var(--br)) scale(.5);
+                opacity: 0;
+            }
+        }
+
+        .ypetal {
+            position: fixed;
+            pointer-events: none;
+            z-index: 20;
+            border-radius: 50% 10% 50% 10%;
+            animation: yellowBurst var(--dur) ease-out var(--delay) forwards;
+        }
+
+        #flowers-message {
+            max-width: 420px;
+            width: 92%;
+            border: 1px solid rgba(245, 197, 24, .2);
+            background: rgba(18, 15, 4, .75);
+            border-radius: 4px;
+            padding: 1.4rem 1.6rem;
+            margin: .4rem 0;
+            opacity: 0;
+            transition: opacity 1.4s ease;
+            backdrop-filter: blur(6px);
+        }
+
+        #flowers-message.visible {
+            opacity: 1;
+        }
+
+        #flowers-message .tradition-label {
+            font-family: 'Cinzel', serif;
+            font-size: .58rem;
+            letter-spacing: .22em;
+            color: var(--sunflower);
+            opacity: .55;
+            text-transform: uppercase;
+            margin-bottom: .7rem;
+            display: block;
+        }
+
+        #flowers-message p {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1.05rem;
+            color: #f0e8a0;
+            line-height: 1.85;
+        }
+
+        /* TREE */
+        #tree-container {
+            width: min(260px, 80vw);
+            position: relative;
+            margin: 1.4rem 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #tree-container svg {
+            width: 100%;
+        }
+
+        #carving {
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--bark);
+            text-align: center;
+            margin-top: .8rem;
+            line-height: 1.5;
+        }
+
+        #carving.visible {
+            opacity: 1;
+        }
+
+        #touch-hint {
+            font-size: .65rem;
+            letter-spacing: .15em;
+            color: var(--moss);
+            text-transform: uppercase;
+            margin-top: .4rem;
+            opacity: .6;
+            transition: opacity .6s;
+        }
+
+        /* KEY */
+        #key-container {
+            position: relative;
+            margin: 1.6rem 0;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        #key-svg {
+            width: min(200px, 55vw);
+            filter: drop-shadow(0 0 20px rgba(201, 168, 76, .4));
+        }
+
+        #key-glow {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(201, 168, 76, .15), transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        #key-container.lit #key-glow {
+            opacity: 1;
+        }
+
+        /* FINAL */
+        #final-stars {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .fstar {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: .2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .9;
+                transform: scale(1.4);
+            }
+        }
+
+        #final-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .final-quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.1rem, 4vw, 1.35rem);
+            font-style: italic;
+            line-height: 1.9;
+            color: #e4dfd4;
+            max-width: 480px;
+            margin-bottom: 2.5rem;
+        }
+
+        .final-dedication {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            color: var(--gold-light);
+            text-shadow: 0 0 40px rgba(201, 168, 76, .5);
+            margin-bottom: .8rem;
+        }
+
+        .final-sig {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: .95rem;
+            color: var(--rose);
+            letter-spacing: .1em;
+        }
+
+        .totems {
+            font-size: 3rem;
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .totem {
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .totem:nth-child(2) {
+            animation-delay: .7s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* NAV DOTS */
+        #nav-dots {
+            position: fixed;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(201, 168, 76, .25);
+            transition: background .4s, transform .4s;
+        }
+
+        .dot.active {
+            background: var(--gold);
+            transform: scale(1.5);
+        }
+
+        /* AMBIENT PETALS */
+        @keyframes petalFall {
+            0% {
+                transform: translateY(-20px) rotate(0deg) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: .8;
+            }
+
+            90% {
+                opacity: .6;
+            }
+
+            100% {
+                transform: translateY(110vh) rotate(720deg) translateX(var(--drift));
+                opacity: 0;
+            }
+        }
+
+        .petal {
+            position: fixed;
+            pointer-events: none;
+            z-index: 5;
+            border-radius: 50% 0 50% 0;
+            animation: petalFall var(--dur) linear var(--delay) infinite;
+        }
+
+        .scene::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .scene::-webkit-scrollbar-thumb {
+            background: rgba(201, 168, 76, .2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="nav-dots">
+        <div class="dot" data-i="0"></div>
+        <div class="dot" data-i="1"></div>
+        <div class="dot" data-i="2"></div>
+        <div class="dot" data-i="3"></div>
+        <div class="dot" data-i="4"></div>
+        <div class="dot" data-i="5"></div>
+    </div>
+
+    <!-- START OVERLAY -->
+    <div id="start-overlay">
+        <div class="crown">🏰</div>
+        <h1>Niferi</h1>
+        <p class="sub">La primera primavera</p>
+        <p class="date">21 de Marzo</p>
+        <button class="btn" onclick="initExperience()">Abrir las Puertas del Castillo</button>
+    </div>
+
+    <!-- ESCENA 0 — PRÓLOGO -->
+    <section id="scene-0" class="scene">
+        <p class="chapter-label">Prólogo</p>
+        <h2 class="scene-title">La primera primavera</h2>
+        <div id="castle-silhouette">
+            <svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#1a0f2e" />
+                        <stop offset="60%" stop-color="#3b1f1f" />
+                        <stop offset="100%" stop-color="#6b3f1f" />
+                    </linearGradient>
+                    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#2a3a2a" />
+                        <stop offset="100%" stop-color="#1a2a1a" />
+                    </linearGradient>
+                    <filter id="glow-f">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <rect width="320" height="180" fill="url(#sky)" />
+                <circle cx="20" cy="15" r="1" fill="white" opacity=".7" />
+                <circle cx="60" cy="8" r="1.2" fill="white" opacity=".9" />
+                <circle cx="100" cy="20" r="1" fill="white" opacity=".6" />
+                <circle cx="140" cy="5" r="1.4" fill="white" opacity=".8" />
+                <circle cx="200" cy="12" r="1" fill="white" opacity=".7" />
+                <circle cx="260" cy="18" r="1.2" fill="white" opacity=".9" />
+                <circle cx="295" cy="7" r="1" fill="white" opacity=".6" />
+                <circle cx="160" cy="145" r="55" fill="rgba(201,168,76,.12)" />
+                <circle cx="160" cy="155" r="35" fill="rgba(201,168,76,.18)" />
+                <rect x="90" y="80" width="140" height="100" fill="url(#stone)" />
+                <rect x="70" y="60" width="45" height="120" fill="url(#stone)" />
+                <polygon points="70,60 92.5,30 115,60" fill="#1e2e1e" />
+                <rect x="205" y="60" width="45" height="120" fill="url(#stone)" />
+                <polygon points="205,60 227.5,30 250,60" fill="#1e2e1e" />
+                <rect x="140" y="40" width="40" height="140" fill="url(#stone)" />
+                <polygon points="140,40 160,10 180,40" fill="#2a3a2a" />
+                <rect x="80" y="80" width="12" height="16" rx="6" fill="rgba(201,168,76,.7)" filter="url(#glow-f)" />
+                <rect x="228" y="80" width="12" height="16" rx="6" fill="rgba(201,168,76,.7)" filter="url(#glow-f)" />
+                <rect x="151" y="58" width="18" height="22" rx="9" fill="rgba(201,168,76,.8)" filter="url(#glow-f)" />
+                <rect x="110" y="100" width="15" height="20" rx="7" fill="rgba(201,168,76,.5)" />
+                <rect x="195" y="100" width="15" height="20" rx="7" fill="rgba(201,168,76,.5)" />
+                <path d="M145,180 L145,145 Q160,130 175,145 L175,180 Z" fill="#0d1a0d" />
+                <rect x="90" y="75" width="10" height="10" fill="url(#stone)" />
+                <rect x="110" y="75" width="10" height="10" fill="url(#stone)" />
+                <rect x="200" y="75" width="10" height="10" fill="url(#stone)" />
+                <rect x="220" y="75" width="10" height="10" fill="url(#stone)" />
+                <line x1="160" y1="10" x2="160" y2="0" stroke="var(--gold)" stroke-width="1.5" />
+                <polygon points="160,0 175,5 160,10" fill="var(--gold)" opacity=".8" />
+                <circle cx="50" cy="120" r="20" fill="#1e3a1e" />
+                <circle cx="42" cy="112" r="14" fill="#253b25" />
+                <circle cx="58" cy="112" r="14" fill="#253b25" />
+                <rect x="47" y="135" width="6" height="20" fill="#3d2010" />
+                <path d="M268,90 Q275,110 268,130 Q275,150 268,170" stroke="#a8d4e6" stroke-width="2" fill="none"
+                    opacity=".4" />
+            </svg>
+        </div>
+        <p class="body-text">
+            Han pasado sesenta días desde que la primera piedra fue colocada en aquella cascada que marcaba el inicio de
+            Niferi.
+            El castillo de Niferi ya está construido, lleno de jardines, puentes, y además con el gran paisaje de la
+            cascada. También tiene su propio coliseo y mercado.
+            Niferi es un reino lleno de nuevas experiencias y aventuras por vivir.
+        </p>
+        <p class="body-text">
+            El <em>21 de marzo</em> inicia la Primavera: Federico lo sabía. Por eso eligió este día para la más íntima
+            de las celebraciones.
+        </p>
+        <button class="btn" onclick="goScene(1)">Despertar en el Castillo</button>
+    </section>
+
+    <!-- ESCENA 1 — EL AMANECER -->
+    <section id="scene-1" class="scene">
+        <p class="chapter-label">Capítulo I</p>
+        <h2 class="scene-title">La Mañana de los Mil Colores</h2>
+        <p class="body-text">
+            Lena despertó dentro del castillo de Niferi por primera vez en una mañana de primavera.
+        </p>
+        <p class="body-text">
+            Sobre la mesita de luz, la tortuga de madera y la de plata seguían en su lugar, fieles guardianas.
+            Pero algo nuevo había aparecido durante la noche: un pequeño ramo de jazmines silvestres atado con un hilo
+            dorado,
+            y una nota doblada junto a él.
+        </p>
+        <div
+            style="background:rgba(245,240,232,.07);border:1px solid rgba(201,168,76,.2);border-radius:3px;padding:1.2rem 1.5rem;max-width:400px;width:90%;margin:1rem 0;transform:rotate(-1deg)">
+            <p
+                style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:#e8dfc8;line-height:1.7">
+                "Hoy es nuestra primera primavera cariño.<br>
+                Encontrá las seis flores del jardín —cada una guarda un recuerdo nuestro.<br>
+                Al final, en el Árbol de la Cascada, aquella que plantamos ese día que colocamos la primera piedra, hay
+                una sorpresita para ti -3-.<br>
+                — <em>Tu tortuga</em> 🐢"
+            </p>
+        </div>
+        <p class="body-text" style="margin-top:1rem">
+            Lena sonrió, envolvió el jazmín entre sus dedos y sintió el calor familiar de todo lo que habían construido
+            juntos.
+            Las piedras del castillo olían a jazmín y cedro. Era su hogar.
+        </p>
+        <button class="btn" onclick="goScene(2)">Ir al jardín</button>
+    </section>
+
+    <!-- ESCENA 2 — EL JARDÍN -->
+    <section id="scene-2" class="scene">
+        <p class="chapter-label">Capítulo II</p>
+        <h2 class="scene-title">El Jardín de los dos mundos</h2>
+        <p class="body-text">
+            En el patio interior del castillo, Federico había creado un jardín que recordaba a sus reinos (ahora
+            unificados en Niferi).
+            Del lado izquierdo crecían las rosas y muchas flores más. Del derecho girasoles y margaritas, llenaban así
+            el jardín de color rojo y amarillo.
+            En el centro, el bambú del Panda florecía.
+        </p>
+        <p class="body-text" style="font-size:1rem;color:#a09880">
+            ✦ Tocá cada flor para descubrir el recuerdo que guarda ✦
+        </p>
+        <div id="garden-grid">
+            <div class="flower-card" onclick="revealFlower(this)">
+                🌸<div class="memory">"La plaza donde nos encontramos... donde tu voz encontró a mi corazón."</div>
+            </div>
+            <div class="flower-card" onclick="revealFlower(this)">
+                🎨<div class="memory">"El día que pintamos el panda y la tortuga. Dibujos hermosos."</div>
+            </div>
+            <div class="flower-card" onclick="revealFlower(this)">
+                🐟<div class="memory">"El pez que atrapé... y las risas que nunca voy a olvidar."</div>
+            </div>
+            <div class="flower-card" onclick="revealFlower(this)">
+                🏠<div class="memory">"La cabaña entre los pinos. El jugo de naranja más rico del mundo con la mejor
+                    compañía, la tuya."</div>
+            </div>
+            <div class="flower-card" onclick="revealFlower(this)">
+                🏮<div class="memory">"El mejor día, tu hermoso cumpleaños -3-"</div>
+            </div>
+            <div class="flower-card" onclick="revealFlower(this)">
+                💧<div class="memory">"La Cascada. La primera piedra. El primer árbol. Nuestro hogar."</div>
+            </div>
+        </div>
+        <div id="garden-btn-wrap" style="opacity:0;transition:opacity 1s;margin-top:.5rem">
+            <button class="btn" onclick="goScene(3)">Entrar a la Gran Sala</button>
+        </div>
+        <p id="garden-progress" style="font-size:.75rem;color:var(--gold);opacity:.5;margin-top:.6rem">
+            0 de 6 recuerdos descubiertos
+        </p>
+    </section>
+
+    <!-- ESCENA 3 — LAS FLORES AMARILLAS -->
+    <section id="scene-3" class="scene">
+        <p class="chapter-label">Capítulo III</p>
+        <h2 class="scene-title">Las Flores del Primer Día</h2>
+
+        <p class="body-text">
+            En la Gran Sala del castillo — con su techo de madera de cedro y sus ventanales que iluminaban todo el salon
+            de luz solar —,
+            Federico la esperaba sentado en un banco de piedra, sosteniendo entre sus manos un ramo de girasoles y
+            margaritas amarillas.
+            Cuando Lena entró, estaban solos. Solo el murmullo lejano del agua y la luz de la mañana entrando por los
+            ventanales.
+        </p>
+        <p class="body-text">
+            Federico se puso de pie despacio y le entrego las flores.
+            "Son para ti, feliz 21 de Marzo bonita", le dijo con esa voz suave que Lena ya conocía de memoria.
+        </p>
+        <p class="body-text" style="font-size:1rem;color:#a09880">
+            ✦ Recibí el ramo ✦
+        </p>
+
+        <!-- Bouquet SVG -->
+        <div id="bouquet-wrap" onclick="receiveFlowers()">
+            <svg viewBox="0 0 260 290" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="sfA" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="#f5c518" />
+                        <stop offset="100%" stop-color="#c9960f" />
+                    </radialGradient>
+                    <radialGradient id="sfB" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="#f9e264" />
+                        <stop offset="100%" stop-color="#d4a017" />
+                    </radialGradient>
+                    <radialGradient id="ctr" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#6b3a10" />
+                        <stop offset="100%" stop-color="#3d1f08" />
+                    </radialGradient>
+                </defs>
+
+                <!-- Stems -->
+                <path d="M96,255 Q92,210 102,162" stroke="#2d5a1a" stroke-width="2.5" fill="none"
+                    stroke-linecap="round" />
+                <path d="M130,260 Q130,215 128,167" stroke="#2d5a1a" stroke-width="2.5" fill="none"
+                    stroke-linecap="round" />
+                <path d="M164,255 Q168,210 158,162" stroke="#2d5a1a" stroke-width="2.5" fill="none"
+                    stroke-linecap="round" />
+                <path d="M113,258 Q109,228 114,190" stroke="#3a6b22" stroke-width="1.8" fill="none"
+                    stroke-linecap="round" />
+                <path d="M147,258 Q151,228 146,190" stroke="#3a6b22" stroke-width="1.8" fill="none"
+                    stroke-linecap="round" />
+
+                <!-- Leaves -->
+                <path d="M104,206 Q87,196 85,182 Q97,185 104,206 Z" fill="#2d5a1a" opacity=".85" />
+                <path d="M156,206 Q173,196 175,182 Q163,185 156,206 Z" fill="#2d5a1a" opacity=".85" />
+                <path d="M126,222 Q111,213 110,202 Q120,204 126,222 Z" fill="#3a6b22" opacity=".7" />
+
+                <!-- Ribbon wrap -->
+                <path d="M82,252 Q130,264 178,252 Q174,272 130,275 Q86,272 82,252 Z" fill="#8b4a2a" opacity=".75" />
+                <path d="M86,258 Q130,268 174,258" stroke="#c97840" stroke-width="1.2" fill="none" opacity=".5" />
+
+                <!-- Sunflower LEFT -->
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(-18 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(22 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(62 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(-58 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(102 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(-98 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(142 98 148)" />
+                <ellipse cx="98" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(-138 98 148)" />
+                <circle cx="98" cy="148" r="17" fill="url(#ctr)" />
+                <circle cx="98" cy="148" r="11" fill="#3d1a06" opacity=".6" />
+
+                <!-- Sunflower CENTER (larger) -->
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfA)" transform="rotate(-12 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfA)" transform="rotate(28 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfB)" transform="rotate(68 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfB)" transform="rotate(-52 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfA)" transform="rotate(108 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfA)" transform="rotate(-92 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfB)" transform="rotate(148 130 140)" />
+                <ellipse cx="130" cy="140" rx="10" ry="24" fill="url(#sfB)" transform="rotate(-132 130 140)" />
+                <circle cx="130" cy="140" r="19" fill="url(#ctr)" />
+                <circle cx="130" cy="140" r="12" fill="#3d1a06" opacity=".6" />
+
+                <!-- Sunflower RIGHT -->
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(8 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(-32 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(52 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(-72 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(92 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(-112 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfA)" transform="rotate(132 162 148)" />
+                <ellipse cx="162" cy="148" rx="9" ry="22" fill="url(#sfB)" transform="rotate(-152 162 148)" />
+                <circle cx="162" cy="148" r="17" fill="url(#ctr)" />
+                <circle cx="162" cy="148" r="11" fill="#3d1a06" opacity=".6" />
+
+                <!-- Small daisy left -->
+                <ellipse cx="114" cy="170" rx="5.5" ry="13" fill="#f9e680" transform="rotate(0 114 170)" />
+                <ellipse cx="114" cy="170" rx="5.5" ry="13" fill="#f7f0a0" transform="rotate(45 114 170)" />
+                <ellipse cx="114" cy="170" rx="5.5" ry="13" fill="#f9e680" transform="rotate(90 114 170)" />
+                <ellipse cx="114" cy="170" rx="5.5" ry="13" fill="#f7f0a0" transform="rotate(-45 114 170)" />
+                <circle cx="114" cy="170" r="8" fill="#d4a017" />
+
+                <!-- Small daisy right -->
+                <ellipse cx="146" cy="170" rx="5.5" ry="13" fill="#f9e680" transform="rotate(20 146 170)" />
+                <ellipse cx="146" cy="170" rx="5.5" ry="13" fill="#f7f0a0" transform="rotate(65 146 170)" />
+                <ellipse cx="146" cy="170" rx="5.5" ry="13" fill="#f9e680" transform="rotate(110 146 170)" />
+                <ellipse cx="146" cy="170" rx="5.5" ry="13" fill="#f7f0a0" transform="rotate(-25 146 170)" />
+                <circle cx="146" cy="170" r="8" fill="#d4a017" />
+
+                <!-- Soft glow ring -->
+                <circle id="bouquet-glow-circle" cx="130" cy="155" r="62" fill="none" stroke="rgba(245,197,24,.12)"
+                    stroke-width="10" opacity="0" />
+            </svg>
+            <p id="bouquet-hint">✦ Recibir el ramo ✦</p>
+        </div>
+
+        <!-- Message -->
+        <div id="flowers-message">
+            <span class="tradition-label">21 de Marzo · Tradición de Primavera</span>
+            <p>
+                "Las flores amarillas son para vos, Lena.<br>
+                Para la persona que hizo de dos reinos un solo hogar.<br><br>
+                En este primer día de primavera, en nuestro primer año en Niferi, quiero que sepas que cada girasol del
+                jardín, cada margarita del patio, cada pétalo que el viento mueva junto a esta cascada... son míos
+                dándote las gracias por existir."
+            </p>
+        </div>
+
+        <div id="flowers-btn" style="opacity:0;transition:opacity 1s;pointer-events:none">
+            <button class="btn" onclick="goScene(4)">Ir al Árbol de la Cascada</button>
+        </div>
+    </section>
+
+    <!-- ESCENA 4 — EL ÁRBOL -->
+    <section id="scene-4" class="scene">
+        <p class="chapter-label">Capítulo IV</p>
+        <h2 class="scene-title">El Árbol de la Cascada</h2>
+        <p class="body-text">
+            Caminaron hasta la cascada.
+            El árbol que plantaron juntos hace tiempo tenía ahora sus primeras hojas: pequeñas, de un verde tan intenso
+            que parecían recién pintadas por Lena misma.
+        </p>
+        <p class="body-text" style="color:#a09880;font-size:.95rem">
+            ✦ Tocá el árbol para descubrir lo que Federico talló en su corteza ✦
+        </p>
+        <div id="tree-container" onclick="revealCarving()">
+            <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="foliage" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="#2d5a2d" />
+                        <stop offset="100%" stop-color="#1a3a1a" />
+                    </radialGradient>
+                </defs>
+                <path d="M85,285 Q75,295 60,292" stroke="#4a2f15" stroke-width="3" fill="none" />
+                <path d="M100,290 Q100,300 90,300" stroke="#4a2f15" stroke-width="3" fill="none" />
+                <path d="M115,285 Q125,295 140,292" stroke="#4a2f15" stroke-width="3" fill="none" />
+                <path d="M85,280 Q82,220 88,160 Q92,130 100,110 Q108,130 112,160 Q118,220 115,280 Z" fill="#5a3a1e" />
+                <path d="M90,200 Q100,195 110,200" stroke="#4a2f15" stroke-width="1" fill="none" opacity=".4" />
+                <path d="M88,230 Q100,224 112,230" stroke="#4a2f15" stroke-width="1" fill="none" opacity=".4" />
+                <path d="M94,185 Q94,179 100,182 Q106,179 106,185 Q106,191 100,197 Q94,191 94,185 Z" fill="none"
+                    stroke="#8b5e3c" stroke-width="1.5" opacity=".3" />
+                <circle cx="100" cy="90" r="55" fill="url(#foliage)" />
+                <circle cx="70" cy="105" r="38" fill="#223a22" />
+                <circle cx="130" cy="105" r="38" fill="#223a22" />
+                <circle cx="100" cy="60" r="42" fill="#2d4f2d" />
+                <circle cx="58" cy="85" r="12" fill="#3d6b3d" opacity=".8" />
+                <circle cx="142" cy="85" r="12" fill="#3d6b3d" opacity=".8" />
+                <circle cx="100" cy="38" r="14" fill="#4a7a4a" opacity=".7" />
+                <circle cx="75" cy="55" r="10" fill="#4a7a4a" opacity=".6" />
+                <circle cx="125" cy="55" r="10" fill="#4a7a4a" opacity=".6" />
+                <circle cx="55" cy="70" r="5" fill="#f7c8d0" opacity=".7" />
+                <circle cx="145" cy="70" r="5" fill="#f7c8d0" opacity=".7" />
+                <circle cx="100" cy="30" r="6" fill="#f7c8d0" opacity=".8" />
+                <circle cx="80" cy="42" r="4" fill="#f7d4a0" opacity=".7" />
+                <circle cx="120" cy="42" r="4" fill="#f7d4a0" opacity=".7" />
+                <path d="M175,50 Q180,100 175,150 Q180,200 175,250" stroke="#a8d4e6" stroke-width="3" fill="none"
+                    opacity=".5" stroke-linecap="round" />
+                <path d="M185,60 Q188,110 185,155 Q188,200 185,248" stroke="#a8d4e6" stroke-width="1.5" fill="none"
+                    opacity=".3" stroke-linecap="round" />
+            </svg>
+            <p id="touch-hint">✦ Tocar el árbol ✦</p>
+            <div id="carving">
+                <p>🐼 + 🐢</p>
+                <p style="font-size:.9rem;color:#8b6240;margin-top:.3rem">"Niferi — Lena & Federico<br><em>21 de Marzo —
+                        Por siempre</em>"</p>
+            </div>
+        </div>
+        <div id="tree-btn" style="opacity:0;transition:opacity 1.2s;pointer-events:none;margin-top:1rem">
+            <p class="body-text" style="margin-bottom:.8rem">
+                Federico sacó una pequeña navaja del bolsillo — la misma que usaba para tallar la madera —
+                y en la corteza del árbol de Niferi dejó marcado lo único que necesitaba decir.
+            </p>
+            <button class="btn" onclick="goScene(5)">Ver el regalo</button>
+        </div>
+    </section>
+
+    <!-- ESCENA 5 — LA LLAVE -->
+    <section id="scene-5" class="scene">
+        <p class="chapter-label">Capítulo V</p>
+        <h2 class="scene-title">La Llave de Niferi</h2>
+        <p class="body-text">
+            De regreso al castillo, empezaba el atardecer.
+            Federico tomó las manos de Lena y las sostuvo en las suyas con la misma calma de la tortuga, con la misma
+            ternura del panda.
+        </p>
+        <p class="body-text">
+            "Un castillo sin llave es solo una piedra grande.
+            Esta llave es tuya. Es nuestra."
+        </p>
+        <div id="key-container" onclick="lightKey()">
+            <div id="key-glow"></div>
+            <svg id="key-svg" viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="keyGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#e8cc7a" />
+                        <stop offset="50%" stop-color="#c9a84c" />
+                        <stop offset="100%" stop-color="#a07828" />
+                    </linearGradient>
+                </defs>
+                <rect x="56" y="100" width="10" height="110" rx="4" fill="url(#keyGrad)" />
+                <rect x="66" y="155" width="14" height="8" rx="2" fill="url(#keyGrad)" />
+                <rect x="66" y="175" width="10" height="8" rx="2" fill="url(#keyGrad)" />
+                <rect x="66" y="195" width="14" height="8" rx="2" fill="url(#keyGrad)" />
+                <circle cx="61" cy="62" r="40" fill="none" stroke="url(#keyGrad)" stroke-width="8" />
+                <circle cx="35" cy="32" r="12" fill="url(#keyGrad)" />
+                <circle cx="87" cy="32" r="12" fill="url(#keyGrad)" />
+                <circle cx="48" cy="58" r="7" fill="#0d1a0d" />
+                <circle cx="74" cy="58" r="7" fill="#0d1a0d" />
+                <ellipse cx="61" cy="72" rx="5" ry="3" fill="#0d1a0d" opacity=".7" />
+                <path d="M58,120 L64,120 L66,128 L61,132 L56,128 Z" fill="rgba(0,0,0,.15)" />
+                <path d="M58,138 L64,138 L66,146 L61,150 L56,146 Z" fill="rgba(0,0,0,.15)" />
+                <line x1="40" y1="48" x2="50" y2="38" stroke="rgba(255,255,255,.4)" stroke-width="2"
+                    stroke-linecap="round" />
+            </svg>
+            <p
+                style="font-size:.65rem;letter-spacing:.18em;color:var(--gold);opacity:.35;text-transform:uppercase;margin-top:.5rem">
+                Tocar para recibir</p>
+        </div>
+        <div id="key-text" style="opacity:0;transition:opacity 1.4s;max-width:480px">
+            <p class="body-text">
+                La llave era de plata y oro fundidos. En la argolla, un panda tallado con la misma destreza que la
+                tortuga de madera del primer día.
+                En el caño, diminutas líneas grabadas formaban el caparazón de una tortuga.
+            </p>
+            <p class="body-text" style="font-style:italic;color:var(--rose)">
+                "La llave de tu castillo, Lena. La llave de mi corazón. Son el mismo lugar."
+            </p>
+            <button class="btn" onclick="goScene(6)">Llegar al final del día</button>
+        </div>
+    </section>
+
+    <!-- ESCENA 6 — FINAL -->
+    <section id="scene-6" class="scene">
+        <div id="final-stars"></div>
+        <div id="final-content" style="padding-bottom:3rem">
+            <p class="chapter-label" style="margin-bottom:2rem">Epílogo</p>
+            <div class="totems">
+                <span class="totem">🐼</span>
+                <span class="totem" style="font-size:2rem;align-self:flex-end;opacity:.6">🏰</span>
+                <span class="totem">🐢</span>
+            </div>
+            <p class="final-quote">
+                "El sol se puso detrás de las montañas. Estaba por terminar el atardecer.
+            </p>
+            <div class="divider"><span>✦</span></div>
+            <p class="final-quote">
+                "Lena y Federico se sentaron en el mirador del castillo, la llave entre las manos de ella,
+                los girasoles en el jarrón de piedra al lado."
+            </p>
+            <div class="divider"><span>✦</span></div>
+            <p class="final-quote" style="color:var(--gold-light);font-size:clamp(1.05rem,3.5vw,1.25rem)">
+                "Se quedaron así, mientras el cielo de primavera encendía sus primeras estrellas —
+                En ese momento, Federico le dijo lo mucho que la amaba y queria, recordando cada día, cada tarde, cada
+                noche que habían pasado juntos."
+                Después, fueron al balcón y mirando las estrellas le dijo: "Espero te haya gustado mi sorpresita, sabes
+                que te amo mucho, mi pequeña. Tenemos mucho por hacer y conocer, por yo enseñarte... y acompañarte. Te
+                quiero mucho... Te Amo muchoooo"
+                Y la tomo de la cintura, le dio un beso en aquellos labios hermosos. Y Lena se sintió la mujer mas feliz
+                del mundo.
+            </p>
+            <div style="margin:2.5rem 0 1.5rem">
+                <p class="final-dedication">Feliz Primavera, Lena</p>
+                <p class="final-sig">Con todo el amor de tu príncipe — Federico 🐢</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let currentScene = -1;
+        let flowerCount = 0;
+        let flowersReceived = false;
+
+        function initExperience() {
+            const ov = document.getElementById('start-overlay');
+            ov.style.opacity = '0';
+            setTimeout(() => { ov.style.display = 'none'; goScene(0); }, 1200);
+            initCanvas();
+            spawnPetals();
+        }
+
+        function goScene(i) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            const next = document.getElementById(`scene-${i}`);
+            if (!next) return;
+            next.classList.add('active');
+            next.scrollTop = 0;
+            currentScene = i;
+            updateDots(i);
+            const modes = { 2: 'garden', 3: 'flowers', 5: 'key', 6: 'final' };
+            updateBgColor(modes[i] || 'default');
+            if (i === 6) buildFinalStars();
+        }
+
+        function updateDots(i) {
+            document.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+        }
+        document.querySelectorAll('.dot').forEach(d => d.addEventListener('click', () => goScene(+d.dataset.i)));
+
+        const bgColors = { default: '#0d1a0d', garden: '#0a1a10', flowers: '#131008', key: '#1a130d', final: '#0d0d1a' };
+        function updateBgColor(mode) {
+            document.body.style.transition = 'background 2s ease';
+            document.body.style.background = bgColors[mode] || bgColors.default;
+        }
+
+        function revealFlower(card) {
+            if (card.classList.contains('revealed')) return;
+            card.classList.add('revealed');
+            flowerCount++;
+            document.getElementById('garden-progress').textContent = `${flowerCount} de 6 recuerdos descubiertos`;
+            if (flowerCount >= 6) {
+                setTimeout(() => {
+                    document.getElementById('garden-btn-wrap').style.opacity = '1';
+                    document.getElementById('garden-progress').style.opacity = '0';
+                }, 600);
+            }
+        }
+
+        /* BOUQUET — yellow petal burst */
+        function receiveFlowers() {
+            if (flowersReceived) return;
+            flowersReceived = true;
+
+            document.getElementById('bouquet-hint').style.opacity = '0';
+
+            // Pulse glow ring
+            const glowRing = document.getElementById('bouquet-glow-circle');
+            glowRing.style.transition = 'opacity .4s';
+            glowRing.setAttribute('opacity', '1');
+            setTimeout(() => { glowRing.style.transition = 'opacity 1.8s'; glowRing.setAttribute('opacity', '0'); }, 500);
+
+            // Burst petals from bouquet
+            const wrap = document.getElementById('bouquet-wrap');
+            const rect = wrap.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height * 0.52;
+
+            const yellows = ['#f5c518', '#f7d060', '#f9e680', '#fef08a', '#e8c040', '#d4a017'];
+            for (let i = 0; i < 32; i++) {
+                const p = document.createElement('div');
+                p.className = 'ypetal';
+                const sz = 7 + Math.random() * 11;
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 80 + Math.random() * 160;
+                const bx = Math.cos(angle) * dist;
+                const by = Math.sin(angle) * dist - 40;
+                p.style.cssText = `
+                width:${sz}px; height:${sz * 1.35}px;
+                left:${cx + (Math.random() - 0.5) * 30}px;
+                top:${cy}px;
+                background:${yellows[Math.floor(Math.random() * yellows.length)]};
+                --bx:${bx}px; --by:${by}px;
+                --br:${Math.random() * 540 - 270}deg;
+                --dur:${0.9 + Math.random() * 0.8}s;
+                --delay:${Math.random() * 0.3}s;
+            `;
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 2500);
+            }
+
+            // Reveal message
+            setTimeout(() => document.getElementById('flowers-message').classList.add('visible'), 650);
+
+            // Show next button
+            setTimeout(() => {
+                const btn = document.getElementById('flowers-btn');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }, 2100);
+        }
+
+        /* TREE CARVING */
+        let carvingRevealed = false;
+        function revealCarving() {
+            if (carvingRevealed) return;
+            carvingRevealed = true;
+            document.getElementById('touch-hint').style.opacity = '0';
+            document.getElementById('carving').classList.add('visible');
+            const tree = document.getElementById('tree-container');
+            tree.style.transition = 'filter .6s';
+            tree.style.filter = 'drop-shadow(0 0 20px rgba(106,66,38,.7))';
+            setTimeout(() => { tree.style.filter = 'drop-shadow(0 0 8px rgba(106,66,38,.3))'; }, 700);
+            setTimeout(() => {
+                const btn = document.getElementById('tree-btn');
+                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+            }, 1600);
+        }
+
+        /* KEY */
+        let keyLit = false;
+        function lightKey() {
+            if (keyLit) return;
+            keyLit = true;
+            document.getElementById('key-container').classList.add('lit');
+            const k = document.getElementById('key-svg');
+            k.style.transition = 'transform .4s, filter .8s';
+            k.style.transform = 'scale(1.08)';
+            k.style.filter = 'drop-shadow(0 0 30px rgba(201,168,76,.7))';
+            setTimeout(() => { k.style.transform = 'scale(1)'; }, 500);
+            setTimeout(() => { document.getElementById('key-text').style.opacity = '1'; }, 900);
+        }
+
+        /* FINAL STARS */
+        function buildFinalStars() {
+            const c = document.getElementById('final-stars');
+            c.innerHTML = '';
+            for (let i = 0; i < 80; i++) {
+                const s = document.createElement('div');
+                s.className = 'fstar';
+                const sz = Math.random() * 2.5 + .8;
+                s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random() * 100}%;top:${Math.random() * 100}%;
+                animation-delay:${Math.random() * 4}s;animation-duration:${2 + Math.random() * 3}s;opacity:${.1 + Math.random() * .5};`;
+                c.appendChild(s);
+            }
+        }
+
+        /* AMBIENT PETALS — mostly yellow for spring */
+        function spawnPetals() {
+            const colors = ['#f5c518', '#f9e680', '#f7d4a0', '#f7c8d0', '#e8c040', '#c8e6d0'];
+            for (let i = 0; i < 16; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                const sz = 6 + Math.random() * 9;
+                p.style.cssText = `
+                width:${sz}px; height:${sz * 1.4}px;
+                left:${Math.random() * 108}%;
+                background:${colors[Math.floor(Math.random() * colors.length)]};
+                opacity:.4;
+                --dur:${8 + Math.random() * 12}s;
+                --delay:${Math.random() * 10}s;
+                --drift:${(Math.random() - 0.5) * 120}px;
+            `;
+                document.body.appendChild(p);
+            }
+        }
+
+        /* CANVAS PARTICLES */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+
+        class Particle {
+            constructor() { this.reset(true); }
+            reset(init) {
+                this.x = Math.random() * canvas.width;
+                this.y = init ? Math.random() * canvas.height : canvas.height + 10;
+                this.size = Math.random() * 1.5 + .5;
+                this.vx = (Math.random() - .5) * .3;
+                this.vy = -(Math.random() * .4 + .1);
+                this.life = 1; this.decay = Math.random() * .003 + .001;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy; this.life -= this.decay;
+                if (this.life <= 0 || this.y < -10) this.reset(false);
+            }
+            draw() {
+                ctx.save(); ctx.globalAlpha = this.life * .35;
+                ctx.fillStyle = '#c9a84c';
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initCanvas() {
+            resizeCanvas();
+            particles = Array.from({ length: 55 }, () => new Particle());
+            animate();
+        }
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+
+</html>
